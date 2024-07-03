@@ -4,7 +4,6 @@ const jwt = require( 'jsonwebtoken' );
 const bcrypt = require( 'bcryptjs' ); // Library for password hashing
 
 const router = express.Router();
-
 // Middleware to verify token
 function verifyToken ( req, res, next )
 {
@@ -36,12 +35,19 @@ router.post( '/signup', async ( req, res ) =>
 {
     try
     {
-        const { fullName, email, phone, date_of_birth, profileImage, password, username, role, student } = req.body;
+        const { fullName, date_of_birth, profileImage, password, username, role, student } = req.body;
+
+        // Check if the username already exists
+        const existingUser = await User.findOne( { username } );
+        if ( existingUser )
+        {
+            return res.status( 409 ).json( { message: 'username found' } );
+        }
 
         // Hash the password
         const hashedPassword = await bcrypt.hash( password, 10 ); // 10 is the salt rounds
 
-        const user = new User( { fullName, email, phone, date_of_birth, profileImage, password: hashedPassword, username, role, student } );
+        const user = new User( { fullName, date_of_birth, profileImage, password: hashedPassword, username, role, student } );
         await user.save();
         res.status( 201 ).json( { message: 'User created successfully' } );
     } catch ( error )
@@ -49,6 +55,7 @@ router.post( '/signup', async ( req, res ) =>
         res.status( 500 ).json( { message: 'Failed to create user', error: error.message } );
     }
 } );
+
 
 // User login
 router.post( '/login', async ( req, res ) =>
@@ -109,12 +116,12 @@ router.put( '/me', verifyToken, async ( req, res ) =>
 {
     try
     {
-        const { fullName, email, phone, date_of_birth, profileImage, username, role, student } = req.body;
+        const { fullName, date_of_birth, profileImage, username, role, student } = req.body;
 
         // Find user and update their details
         const user = await User.findByIdAndUpdate(
             req.user.userId,
-            { fullName, email, phone, date_of_birth, profileImage, username, role, student },
+            { fullName, date_of_birth, profileImage, username, role, student },
             { new: true, runValidators: true } // Return the updated document and run validation
         ).select( '-password' ); // Exclude password field
 
