@@ -36,12 +36,12 @@ router.post( '/signup', async ( req, res ) =>
 {
     try
     {
-        const { fullName, email, phone, date_of_birth, profileImage, password, username } = req.body;
+        const { fullName, email, phone, date_of_birth, profileImage, password, username, student } = req.body;
 
         // Hash the password
         const hashedPassword = await bcrypt.hash( password, 10 ); // 10 is the salt rounds
 
-        const user = new User( { fullName, email, phone, date_of_birth, profileImage, password: hashedPassword, username } );
+        const user = new User( { fullName, email, phone, date_of_birth, profileImage, password: hashedPassword, username, student } );
         await user.save();
         res.status( 201 ).json( { message: 'User created successfully' } );
     } catch ( error )
@@ -109,12 +109,12 @@ router.put( '/me', verifyToken, async ( req, res ) =>
 {
     try
     {
-        const { fullName, email, phone, date_of_birth, profileImage, username } = req.body;
+        const { fullName, email, phone, date_of_birth, profileImage, username, student } = req.body;
 
         // Find user and update their details
         const user = await User.findByIdAndUpdate(
             req.user.userId,
-            { fullName, email, phone, date_of_birth, profileImage, username },
+            { fullName, email, phone, date_of_birth, profileImage, username, student },
             { new: true, runValidators: true } // Return the updated document and run validation
         ).select( '-password' ); // Exclude password field
 
